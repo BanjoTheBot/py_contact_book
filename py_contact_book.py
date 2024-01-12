@@ -1,10 +1,12 @@
 """The default main window"""
 
+import json
+import uuid
+from configparser import ConfigParser
+
 import PySimpleGUI as sg
 
-from src.modules import read_config
-from configparser import ConfigParser
-import json
+from src.modules import new_windows, read_config, write_config
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
@@ -14,21 +16,6 @@ config.read("./config.ini")
 SAVED_CONTACTS = "saved_contacts.json"
 
 window_theme = read_config.get_usr_theme()
-
-
-def new_contact():
-    # sg.theme(window_theme)
-    layout = [
-        # TODO: Make it so that all input boxes are even with each other.
-        # I've tried adding whitespace, and that has varying results so don't.
-        [sg.Text("Name:"), sg.InputText(key="name")],
-        [sg.Text("Email Address:"), sg.InputText(key="email")],
-        [sg.Text("Phone Number:"), sg.InputText(key="phone")],
-        [sg.Button("Submit"), sg.Button("Cancel")]
-    ]
-
-    window = sg.Window("Input Window", layout, finalize=True)
-    return window
 
 
 def main():
@@ -47,14 +34,11 @@ def main():
         event, values = window.read()
 
         if event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or event == "Cancel":
-            # Writes updated config values to the file
-            with open("config.ini", "w") as config_file:
-                config.write(config_file)
             break
 
-        # Add new contact
+        # Add new contact window
         if event == "Add":
-            add_contact_window = new_contact()
+            add_contact_window = new_windows.new_contact_window()
 
             while True:
                 event, values_input = add_contact_window.read()
@@ -63,24 +47,39 @@ def main():
                     break
 
                 if event == "Submit":
+                    items_not_empty = 0
+
                     contact_to_add = {
+                        # TODO: The id is at the top for readability,
+                        #  but find a way so that it's displayed last (or not at all) on the table.
+                        #  Shouldn't be too hard.
+                        "id": uuid.uuid1().int,
                         "Name": values_input["name"],
                         "Email Address": values_input["email"],
                         "Phone Number": values_input["phone"]
                     }
 
-                    with open(SAVED_CONTACTS, "r") as file:
-                        data_list = json.load(file)
-                        data_list.append(contact_to_add)
+                    # If only one item has been filled out (it will always be id), throw an error and stop
+                    # the user from adding an empty contact
+                    for entry_value in contact_to_add.values():
+                        if entry_value != "":
+                            items_not_empty += 1
 
-                    with open(SAVED_CONTACTS, "w") as file:
-                        json.dump(data_list, file, indent=4)
+                    if items_not_empty > 1:
+                        with open(SAVED_CONTACTS, "r") as file:
+                            data_list = json.load(file)
+                            data_list.append(contact_to_add)
 
+                        with open(SAVED_CONTACTS, "w") as file:
+                            json.dump(data_list, file, indent=4)
+
+                    else:
+                        new_windows.error_window("New contacts must have at least one entry with text in it")
+                        write_config.increment_value("Stats", "TimesYouTriedToAddAnEmptyContact", 1)
                     break
 
             add_contact_window.close()
-            # Keeps the whole application from closing when the add window is closed, as well as reloading everything
-            main()
+            window.refresh()
 
     window.close()
 
