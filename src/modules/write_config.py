@@ -14,7 +14,6 @@ def increment_value(section, value, increment_by: int):
         :param value: The value to increment
         :param increment_by: the number to increment the value by
     """
-    print(config.get(section, value))
     current_value = config.getint(section, value)
     new_value = current_value + increment_by
 

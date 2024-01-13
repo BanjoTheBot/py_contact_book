@@ -15,7 +15,6 @@ def error_window(message: str):
 
 
 def new_contact_window():
-    # sg.theme(window_theme)
     layout = [
         # TODO: Make it so that all input boxes are even with each other.
         #  I've tried adding whitespace, and that has varying results so don't.

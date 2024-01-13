@@ -18,13 +18,32 @@ SAVED_CONTACTS = "saved_contacts.json"
 window_theme = read_config.get_usr_theme()
 
 
+def make_contacts_table():
+    top_row = ["id", "Name", "Email", "Phone No."]
+    rows = read_config.make_lists_from_contacts(SAVED_CONTACTS)
+
+    contacts_table = sg.Table(values=rows, headings=top_row,
+                              auto_size_columns=True,
+                              display_row_numbers=False,
+                              justification='center', key='-TABLE-',
+                              enable_events=True,
+                              expand_x=True,
+                              expand_y=True,
+                              enable_click_events=True)
+
+    return contacts_table
+
+
 def main():
     window_size = (800, 600)
 
     sg.theme(window_theme)
 
+    contacts_table = make_contacts_table()
+
     layout = [[sg.Text("Python Contact Book", size=400, font=("Arial", 25), justification="c")],
-              [sg.Button("Add")]
+              [sg.Button("Add")],
+              [contacts_table]
               ]
 
     window = sg.Window("Python Contact Book", layout, size=window_size, resizable=True,
@@ -53,7 +72,7 @@ def main():
                         # TODO: The id is at the top for readability,
                         #  but find a way so that it's displayed last (or not at all) on the table.
                         #  Shouldn't be too hard.
-                        "id": uuid.uuid1().int,
+                        "id": int(str(uuid.uuid1().int)[:5]),  # This shortens the uuid, while keeping it as an int.
                         "Name": values_input["name"],
                         "Email Address": values_input["email"],
                         "Phone Number": values_input["phone"]
@@ -73,13 +92,17 @@ def main():
                         with open(SAVED_CONTACTS, "w") as file:
                             json.dump(data_list, file, indent=4)
 
+                        # Automatically refreshes table with new contact
+                        new_table = make_contacts_table()
+                        new_table = new_table.get()
+                        window['-TABLE-'].update(new_table)
+
                     else:
                         new_windows.error_window("New contacts must have at least one entry with text in it")
                         write_config.increment_value("Stats", "TimesYouTriedToAddAnEmptyContact", 1)
                     break
 
             add_contact_window.close()
-            window.refresh()
 
     window.close()
 
