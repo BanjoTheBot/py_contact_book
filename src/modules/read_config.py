@@ -1,7 +1,7 @@
-"""Returns the values of settings defined in /config.ini/"""
+"""Returns the values of settings defined in /config.ini/ and /saved_contacts.json/"""
 
-from configparser import ConfigParser
 import json
+from configparser import ConfigParser
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
@@ -17,6 +17,11 @@ def get_usr_theme():
 def custom_window_size_bool():
     """Returns the value of RememberCustomWindowSize as a boolean"""
     return config.get("OptionSelect", "RememberCustomWindowSize") == "true"
+
+
+def return_stat(stat):
+    config.read("./config.ini")  # Reloads the ini so the stats window stays up to date
+    return config.get("Stats", stat)
 
 
 def make_lists_from_contacts(json_file_path):

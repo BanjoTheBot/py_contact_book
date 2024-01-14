@@ -2,6 +2,7 @@
 
 import json
 import uuid
+import webbrowser
 from configparser import ConfigParser
 
 import PySimpleGUI as sg
@@ -15,6 +16,8 @@ config.read("./config.ini")
 
 SAVED_CONTACTS = "saved_contacts.json"
 
+# This was originally going to be changeable,
+# but they may end up being more difficult than I thought, due to icons and PySimpleGui's sheer amount of themes
 window_theme = read_config.get_usr_theme()
 
 
@@ -42,12 +45,14 @@ def main():
     contacts_table = make_contacts_table()
 
     layout = [[sg.Text("Python Contact Book", size=400, font=("Arial", 25), justification="c")],
-              [sg.Button("Add")],
+              [sg.Button("Add"), sg.Push(), sg.Button("About")],
               [contacts_table]
               ]
 
     window = sg.Window("Python Contact Book", layout, size=window_size, resizable=True,
                        enable_close_attempted_event=True)
+
+    write_config.increment_value("Stats", "TimesProgramWasOpened", 1)
 
     while True:
         event, values = window.read()
@@ -97,6 +102,7 @@ def main():
                         new_table = new_table.get()
                         window['-TABLE-'].update(new_table)
 
+                        write_config.increment_value("Stats", "AllTimeContactsAdded", 1)
                     else:
                         new_windows.error_window("New contacts must have at least one entry with text in it")
                         write_config.increment_value("Stats", "TimesYouTriedToAddAnEmptyContact", 1)
@@ -104,6 +110,16 @@ def main():
 
             add_contact_window.close()
 
+        if event == "About":
+            about_window = new_windows.about_window()
+
+            while True:
+                event, values_input = about_window.read()
+                if event == sg.WIN_CLOSED or event == "Cancel":
+                    break
+
+                if event == "-GH-BUTTON-":
+                    webbrowser.open("https://github.com/BanjoTheBot/py_contact_book")
     window.close()
 
 
