@@ -1,2 +1,3 @@
+#!/bin/bash
 pip install -r requirements.txt
-python py_contact_book.py
+python3 py_contact_book.py
