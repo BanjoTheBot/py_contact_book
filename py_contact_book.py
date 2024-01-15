@@ -37,6 +37,12 @@ def make_contacts_table():
     return contacts_table
 
 
+def refresh_table(window):
+    new_table = make_contacts_table()
+    new_table = new_table.get()
+    window['-TABLE-'].update(new_table)
+
+
 def main():
     window_size = (800, 600)
 
@@ -74,9 +80,6 @@ def main():
                     items_not_empty = 0
 
                     contact_to_add = {
-                        # TODO: The id is at the top for readability,
-                        #  but find a way so that it's displayed last (or not at all) on the table.
-                        #  Shouldn't be too hard.
                         "id": int(str(uuid.uuid1().int)[:5]),  # This shortens the uuid, while keeping it as an int.
                         "Name": values_input["name"],
                         "Email Address": values_input["email"],
@@ -97,10 +100,7 @@ def main():
                         with open(SAVED_CONTACTS, "w") as file:
                             json.dump(data_list, file, indent=4)
 
-                        # Automatically refreshes table with new contact
-                        new_table = make_contacts_table()
-                        new_table = new_table.get()
-                        window['-TABLE-'].update(new_table)
+                        refresh_table(window)
 
                         write_config.increment_value("Stats", "AllTimeContactsAdded", 1)
                     else:
@@ -109,6 +109,90 @@ def main():
                     break
 
             add_contact_window.close()
+
+        if event == "-TABLE-":
+            row_selected = [read_config.make_lists_from_contacts(SAVED_CONTACTS)[row] for row in values[event]]
+
+            # For some reason when we refresh the table, the event is set to -TABLE- again,
+            # but there is no row selected, so row_selected doesn't equal anything.
+            # Since id_to_find is trying to assign itself to the first position of nothing, the program crashes
+            # due to an out of range error.
+            # Stopping anything from being assigned and making sure nothing happens after that fixes the crash,
+            # but still refreshes the table, allowing everything to run as intended.
+            if not row_selected:
+                continue
+            else:
+                id_to_find = (row_selected[0])
+
+            options_menu = new_windows.row_selected_window(row_selected)
+
+            while True:
+                event, values_input = options_menu.read()
+                if event == sg.WIN_CLOSED or event == "Cancel":
+                    break
+
+                with open(SAVED_CONTACTS, 'r') as file:
+                    data = json.load(file)
+
+                if event == "-EDIT-":
+                    for item in data:
+                        if item["id"] == id_to_find[0]:
+                            options_menu.close()
+                            edit_window = new_windows.edit_contact_window(item)
+                            while True:
+                                event, values_input = edit_window.read()
+
+                                if event == sg.WIN_CLOSED or event == "Cancel":
+                                    break
+
+                                if event == "Submit":
+                                    items_not_empty = 0
+
+                                    contact_to_add = {
+                                        "Name": values_input["name"],
+                                        "Email Address": values_input["email"],
+                                        "Phone Number": values_input["phone"]
+                                    }
+
+                                    # If only one item has been filled out (it will always be id),
+                                    # throw an error and stop the user from adding an empty contact
+                                    for entry_value in contact_to_add.values():
+                                        if entry_value != "":
+                                            items_not_empty += 1
+
+                                    if items_not_empty > 1:
+                                        item["Name"] = values_input["name"]
+                                        item["Email Address"] = values_input["email"]
+                                        item["Phone Number"] = values_input["phone"]
+
+                                    with open(SAVED_CONTACTS, "w") as file:
+                                        json.dump(data, file, indent=4)
+
+                                    refresh_table(window)
+                                break
+                            edit_window.close()
+
+                if event == "-DELETE-":
+                    confirmation = new_windows.confirmation_window()
+
+                    options_menu.close()
+                    while True:
+                        event, values_input = confirmation.read()
+
+                        if event == sg.WIN_CLOSED or event == "Cancel":
+                            break
+
+                        if event == "-ERADICATE-":
+                            for item in data:
+                                if list(item.values()) == row_selected[0]:
+                                    data.remove(item)
+
+                            with open(SAVED_CONTACTS, 'w') as file:
+                                json.dump(data, file, indent=4)
+
+                            refresh_table(window)
+                            break
+                    confirmation.close()
 
         if event == "About":
             about_window = new_windows.about_window()

@@ -27,6 +27,8 @@ def new_contact_window():
     layout = [
         # TODO: Make it so that all input boxes are even with each other.
         #  I've tried adding whitespace, and that has varying results so don't.
+        #  Do for edit window as well.
+        #  This isn't vital and I might not do it but we'll see
         [sg.Text("Name:"), sg.InputText(key="name")],
         [sg.Text("Email Address:"), sg.InputText(key="email")],
         [sg.Text("Phone Number:"), sg.InputText(key="phone")],
@@ -34,6 +36,39 @@ def new_contact_window():
     ]
 
     window = sg.Window("Input Window", layout, finalize=True)
+    return window
+
+
+def row_selected_window(row_selected):
+    """Window with options that appears when you select a row in the contacts table"""
+    layout = [
+        [sg.Text("What would you like to do with this contact?", justification="c")],
+        [sg.Button("Edit", key="-EDIT-"), sg.Push(), sg.Button("Delete", key="-DELETE-")]
+    ]
+
+    window = sg.Window("Contact Settings", layout, finalize=True)
+    return window
+
+
+def edit_contact_window(json_dict):
+    layout = [
+        [sg.Text("Name:"), sg.InputText(json_dict["Name"], key="name")],
+        [sg.Text("Email Address:"), sg.InputText(json_dict["Email Address"], key="email")],
+        [sg.Text("Phone Number:"), sg.InputText(json_dict["Phone Number"], key="phone")],
+        [sg.Button("Submit"), sg.Button("Cancel")]
+    ]
+
+    window = sg.Window("Edit Contact", layout, finalize=True)
+    return window
+
+
+def confirmation_window():
+    layout = [
+        [sg.Text("Are you sure you'd like to delete this contact? Press X to back out")],
+        [sg.Button("Yes, banish them to the shadow realm", key="-ERADICATE-")]
+    ]
+
+    window = sg.Window("Delete Contact?", layout, element_justification="c", finalize=True)
     return window
 
 
@@ -56,6 +91,7 @@ def about_window():
                   font=("Arial", 10))],
               [sg.Button(
                   image_filename="./img/gh.png",
+                  tooltip="This project's Github Repo!",
                   button_color=(sg.theme_background_color(), sg.theme_background_color()),
                   border_width=0,
                   image_subsample=10,  # Have to resort to using this because image_size was giving me problems
