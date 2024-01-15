@@ -10,7 +10,9 @@ Install by either cloning the repo through git, or downloading the zip directly(
 
 If you're on **Windows**, run **py_contact_book.bat**, found in the root folder.
 
-If you're on **Linux** or **Mac**, run **py_contact_book.sh**, also found in the root folder.
+If you're on **Linux** or **Mac**, run **py_contact_book.sh**, also found in the root folder.\
+**NOTE: Linux users may need to run** `chmod u+x py-contact-book.sh`, 
+I'll remove this if I ever get around to fixing it on my Linux install.
 
 These files will install PySimpleGui and run the program.
 
