@@ -3,6 +3,7 @@
 import json
 from configparser import ConfigParser
 from src.modules.config_paths import CONFIG_PATH
+from src.modules import write_config
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
@@ -12,15 +13,12 @@ config.read(CONFIG_PATH)
 
 def get_usr_theme():
     """Returns the currently selected theme. Default is DarkGray9"""
+    write_config.value_exists_safety("Config", "UsrSelectedTheme", "DarkGray9")
     return config.get("Config", "UsrSelectedTheme")
 
 
-def custom_window_size_bool():
-    """Returns the value of RememberCustomWindowSize as a boolean"""
-    return config.get("OptionSelect", "RememberCustomWindowSize") == "true"
-
-
 def return_stat(stat):
+    write_config.value_exists_safety("Stats", stat, 0)
     config.read(CONFIG_PATH)  # Reloads the ini so the stats window stays up to date
     return config.get("Stats", stat)
 

@@ -2,6 +2,7 @@
 
 import json
 import os
+import platform
 import shutil
 import uuid
 import webbrowser
@@ -24,7 +25,7 @@ if not os.path.exists(SAVED_CONTACTS):
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
-config.optionxform = str  # This should (hopefully) stop ConfigParser changing config values to lowercase
+config.optionxform = str  # This should (hopefully) stop ConfigParser changing config keys to lowercase
 config.read(CONFIG_PATH)
 
 # This was originally going to be changeable,
@@ -69,7 +70,7 @@ def main():
     window = sg.Window("Python Contact Book", layout, size=window_size, resizable=True,
                        enable_close_attempted_event=True)
 
-    write_config.increment_value("Stats", "TimesProgramWasOpened", 1)
+    write_config.increment_key("Stats", "TimesProgramWasOpened", 1)
 
     while True:
         event, values = window.read()
@@ -113,10 +114,10 @@ def main():
 
                         refresh_table(window)
 
-                        write_config.increment_value("Stats", "AllTimeContactsAdded", 1)
+                        write_config.increment_key("Stats", "AllTimeContactsAdded", 1)
                     else:
                         new_windows.error_window("New contacts must have at least one entry with text in it")
-                        write_config.increment_value("Stats", "TimesYouTriedToAddAnEmptyContact", 1)
+                        write_config.increment_key("Stats", "TimesYouTriedToAddAnEmptyContact", 1)
                     break
 
             add_contact_window.close()
@@ -213,6 +214,19 @@ def main():
                 if event == sg.WIN_CLOSED or event == "Cancel":
                     break
 
+                if event == "-CONFIG-TELEPORT-":
+                    match platform.system():
+                        case "Windows":
+                            os.system(f"explorer {USR_CONFIG_DIR}")
+                        case "Linux":
+                            os.system(f"xdg-open {USR_CONFIG_DIR}")
+                        case "Darwin":  # macOS
+                            os.system(f"open {USR_CONFIG_DIR}")
+                        case _:
+                            new_windows.error_window("Apparently, your OS is either not read correctly, "
+                                                     "or you're not using Windows, Linux or macOS."
+                                                     "\nPlease make an issue on the GitHub repo with information "
+                                                     "regarding your OS.")
                 if event == "-GH-BUTTON-":
                     webbrowser.open("https://github.com/BanjoTheBot/py_contact_book")
     window.close()
