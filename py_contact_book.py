@@ -4,6 +4,7 @@ import json
 import os
 import platform
 import shutil
+import sys
 import uuid
 import webbrowser
 from configparser import ConfigParser
@@ -13,15 +14,24 @@ import PySimpleGUI as sg
 from src.modules import new_windows, read_config, write_config
 from src.modules.config_paths import CONFIG_PATH, SAVED_CONTACTS, USR_CONFIG_DIR
 
+# Since the file structure changes when the program is bundled in an exe, we have to check to see what state it's in,
+# and then change the path the original config and json files are found in accordingly.
+if getattr(sys, "freeze", False):
+    # Running as a bundle in an exe (frozen)
+    bundle_dir = sys.MEIPASS  # I don't know why it's whining, but it works, so I ain't touching it
+else:
+    # Running directly as a script
+    bundle_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Create configuration and json files in /(user home directory)/.config/banjo/py-contact-book
 if not os.path.exists(USR_CONFIG_DIR):
     os.makedirs(USR_CONFIG_DIR)
 
 if not os.path.exists(CONFIG_PATH):
-    shutil.copy("config.ini", CONFIG_PATH)
+    shutil.copy(os.path.join(bundle_dir, "config.ini"), CONFIG_PATH)
 
 if not os.path.exists(SAVED_CONTACTS):
-    shutil.copy("saved_contacts.json", SAVED_CONTACTS)
+    shutil.copy(os.path.join(bundle_dir, "saved_contacts.json"), SAVED_CONTACTS)
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
@@ -30,7 +40,7 @@ config.read(CONFIG_PATH)
 
 # This was originally going to be changeable,
 # but they may end up being more difficult than I thought, due to icons and PySimpleGui's sheer amount of themes
-window_theme = read_config.get_usr_theme()
+window_theme = "DarkGray9"
 
 
 def make_contacts_table():
@@ -70,7 +80,7 @@ def main():
     window = sg.Window("Python Contact Book", layout, size=window_size, resizable=True,
                        enable_close_attempted_event=True)
 
-    write_config.increment_key("Stats", "TimesProgramWasOpened", 1)
+    write_config.increment_key("Stats", "TimesProgramWasOpened", "1")
 
     while True:
         event, values = window.read()

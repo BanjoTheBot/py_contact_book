@@ -2,28 +2,38 @@
 
 A simple contact book made using PySimpleGui.
 
-Saves all contacts through a json file stored in the root folder, as well as some stats and (maybe in the future)
-actual configuration values.
+Saves all contacts through a json file stored in `(user home dir)/.config/banjo/py-contact-book`, 
+as well as some stats and (maybe in the future) actual configuration values.
 
 ## Running
-Install by either cloning the repo through git, or downloading the zip directly(Big Green Code Button -> Download Zip.) 
+You are able to find the latest release [here.](https://github.com/BanjoTheBot/py_contact_book/releases)
 
-If you're on **Windows**, run **py_contact_book.bat**, found in the root folder.
+Here you can download the .exe file for usage on Windows, and the (FILE TYPE HERE) for Linux. After that it should be a 
+simple click and play.
 
-If you're on **Linux** or **Mac**, run **py_contact_book.sh**, also found in the root folder.
+## Compiling
+If you would like to run the file through Python directly or make changes to the code, here are the steps to follow.
 
-These files will install PySimpleGui and run the program.
+Once you have the repo cloned, run these commands to create the venv and install all necessary requirements.
 
-You can also run the program from the command-line. 
-This is probably faster if you have the requirements already installed.
+On Windows:
+```
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-## Updating
-If I ever make a substantial update to this you would like to "upgrade" to, here are the steps to update the program.
+On Linux and macOS:
+```
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-### Using Git (Recommended if you know how)
-Simply open the root folder in the terminal, and run `git pull`. 
-This will update the program while keeping your contacts, configuration, and stats intact.
+To run from Python, simply run `py-contact-book.py` from your IDE or CLI.
 
-### Redownloading
-Back up your `saved_contacts.json` and `config.ini` files somewhere else on your computer before repeating the steps you 
-followed to download this from GitHub originally (Big Green Code Button -> Download Zip).
+If you want to compile an executable file, we use PyInstaller. Run this command to compile as expected. 
+Pyinstaller should have been downloaded when you installed from requirements.txt earlier.
+```
+pyinstaller --add-data "src/modules;./src/modules" --add-data "config.ini;./" --add-data "saved_contacts.json;./" py_contact_book.py --noconfirm --onefile
+```

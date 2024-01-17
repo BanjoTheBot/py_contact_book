@@ -2,8 +2,9 @@
 
 import json
 from configparser import ConfigParser
-from src.modules.config_paths import CONFIG_PATH
+
 from src.modules import write_config
+from src.modules.config_paths import CONFIG_PATH
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
@@ -18,7 +19,7 @@ def get_usr_theme():
 
 
 def return_stat(stat):
-    write_config.value_exists_safety("Stats", stat, 0)
+    write_config.value_exists_safety("Stats", stat, "0")
     config.read(CONFIG_PATH)  # Reloads the ini so the stats window stays up to date
     return config.get("Stats", stat)
 
