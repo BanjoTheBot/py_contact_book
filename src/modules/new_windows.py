@@ -4,11 +4,12 @@ from configparser import ConfigParser
 import PySimpleGUI as sg
 
 from src.modules import read_config
+from src.modules.config_paths import CONFIG_PATH
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
 config.optionxform = str  # This should (hopefully) stop ConfigParser changing config values to lowercase
-config.read("./config.ini")
+config.read(CONFIG_PATH)
 
 
 def error_window(message: str):

@@ -1,6 +1,8 @@
 """The default main window"""
 
 import json
+import os
+import shutil
 import uuid
 import webbrowser
 from configparser import ConfigParser
@@ -8,13 +10,22 @@ from configparser import ConfigParser
 import PySimpleGUI as sg
 
 from src.modules import new_windows, read_config, write_config
+from src.modules.config_paths import CONFIG_PATH, SAVED_CONTACTS, USR_CONFIG_DIR
+
+# Create configuration and json files in /(user home directory)/.config/banjo/py-contact-book
+if not os.path.exists(USR_CONFIG_DIR):
+    os.makedirs(USR_CONFIG_DIR)
+
+if not os.path.exists(CONFIG_PATH):
+    shutil.copy("config.ini", CONFIG_PATH)
+
+if not os.path.exists(SAVED_CONTACTS):
+    shutil.copy("saved_contacts.json", SAVED_CONTACTS)
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
 config.optionxform = str  # This should (hopefully) stop ConfigParser changing config values to lowercase
-config.read("./config.ini")
-
-SAVED_CONTACTS = "saved_contacts.json"
+config.read(CONFIG_PATH)
 
 # This was originally going to be changeable,
 # but they may end up being more difficult than I thought, due to icons and PySimpleGui's sheer amount of themes

@@ -1,11 +1,12 @@
 """Edits values in the config"""
 
 from configparser import ConfigParser
+from src.modules.config_paths import CONFIG_PATH
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
 config.optionxform = str  # This should (hopefully) stop ConfigParser changing config values to lowercase
-config.read("./config.ini")
+config.read(CONFIG_PATH)
 
 
 def increment_value(section, value, increment_by: int):
@@ -19,5 +20,5 @@ def increment_value(section, value, increment_by: int):
 
     config.set(section, value, str(new_value))
 
-    with open("config.ini", 'w') as config_file:
+    with open(CONFIG_PATH, 'w') as config_file:
         config.write(config_file)
