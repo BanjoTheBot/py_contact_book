@@ -4,11 +4,12 @@ from configparser import ConfigParser
 import PySimpleGUI as sg
 
 from src.modules import read_config
+from src.modules.config_paths import CONFIG_PATH
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
 config.optionxform = str  # This should (hopefully) stop ConfigParser changing config values to lowercase
-config.read("./config.ini")
+config.read(CONFIG_PATH)
 
 
 def error_window(message: str):
@@ -89,6 +90,7 @@ def about_window():
               [sg.Text(
                   f"Amount of times you tried to make an empty contact: {empty_contact_attempts}",
                   font=("Arial", 10))],
+              [sg.Button("Take me to my configuration files", key="-CONFIG-TELEPORT-")],
               [sg.Button(
                   image_filename="./img/gh.png",
                   tooltip="This project's Github Repo!",
@@ -98,5 +100,5 @@ def about_window():
                   key="-GH-BUTTON-")],
               ]
 
-    window = sg.Window("About", layout, finalize=True, element_justification="c", size=(400, 360))
+    window = sg.Window("About", layout, finalize=True, element_justification="c", size=(400, 400))
     return window
