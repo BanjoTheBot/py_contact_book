@@ -31,7 +31,7 @@ def value_exists_safety(section: str, key: str, value: str):
         config.write(f)
 
 
-def increment_key(section, key, increment_by: str):
+def increment_key(section, key, increment_by):
     """Increments an INI value by a defined amount
         :param section: The section to find the value in
         :param key: The key to increment

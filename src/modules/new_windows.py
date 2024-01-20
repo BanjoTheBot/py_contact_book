@@ -1,4 +1,6 @@
 """Contains all new windows that may be created"""
+import os
+import sys
 from configparser import ConfigParser
 
 import PySimpleGUI as sg
@@ -74,11 +76,20 @@ def confirmation_window():
 
 
 def about_window():
+    # This is different from the same thing that happens in the main file,
+    # but it works, so I'm not gonna think about it.
+    if hasattr(sys, '_MEIPASS'):
+        # Running as a bundle in an exe (frozen)
+        bundle_dir = f"{sys._MEIPASS}/img"
+    else:
+        # Running directly as a script
+        bundle_dir = "./img"  # I don't know why it's whining, but it works, so I ain't touching it
+
     program_openings = read_config.return_stat("TimesProgramWasOpened")
     contacts_added = read_config.return_stat("AllTimeContactsAdded")
     empty_contact_attempts = read_config.return_stat("TimesYouTriedToAddAnEmptyContact")
 
-    layout = [[sg.Image("./img/sg_logo.png")],
+    layout = [[sg.Image(f"{bundle_dir}/sg_logo.png")],
               [sg.Text("A PySimpleGui program \n       made by Banjo", font=("Arial", 20))],
               [sg.Text("Your Stats", font=("Arial", 15, "bold"))],
               [sg.Text(
@@ -92,7 +103,7 @@ def about_window():
                   font=("Arial", 10))],
               [sg.Button("Take me to my configuration files", key="-CONFIG-TELEPORT-")],
               [sg.Button(
-                  image_filename="./img/gh.png",
+                  image_filename=f"{bundle_dir}/gh.png",
                   tooltip="This project's Github Repo!",
                   button_color=(sg.theme_background_color(), sg.theme_background_color()),
                   border_width=0,

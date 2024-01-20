@@ -5,7 +5,7 @@ a = Analysis(
     ['py_contact_book.py'],
     pathex=[],
     binaries=[],
-    datas=[('src/modules', './src/modules'), ('config.ini', './'), ('saved_contacts.json', './')],
+    datas=[('src/modules', './src/modules'), ('config.ini', './'), ('saved_contacts.json', './'), ('img/', './img/')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
