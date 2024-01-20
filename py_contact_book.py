@@ -16,12 +16,13 @@ from src.modules.config_paths import CONFIG_PATH, SAVED_CONTACTS, USR_CONFIG_DIR
 
 # Since the file structure changes when the program is bundled in an exe, we have to check to see what state it's in,
 # and then change the path the original config and json files are found in accordingly.
-if getattr(sys, "freeze", False):
-    # Running as a bundle in an exe (frozen)
-    bundle_dir = sys.MEIPASS  # I don't know why it's whining, but it works, so I ain't touching it
-else:
+if getattr(sys, "freeze", True):
     # Running directly as a script
     bundle_dir = os.path.dirname(os.path.abspath(__file__))
+else:
+    # Running as a bundle in an exe (frozen)
+    bundle_dir = sys._MEIPASS  # I don't know why it's whining, but it works, so I ain't touching it
+
 
 # Create configuration and json files in /(user home directory)/.config/banjo/py-contact-book
 if not os.path.exists(USR_CONFIG_DIR):
@@ -83,29 +84,31 @@ def main():
     write_config.increment_key("Stats", "TimesProgramWasOpened", "1")
 
     while True:
-        event, values = window.read()
+        main_event, main_values_input = window.read()
 
-        if event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or event == "Cancel":
+        if main_event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or main_event == "Cancel":
             break
 
         # Add new contact window
-        if event == "Add":
+        if main_event == "Add":
             add_contact_window = new_windows.new_contact_window()
 
             while True:
-                event, values_input = add_contact_window.read()
+                add_event, add_values_input = add_contact_window.read()
 
-                if event == sg.WIN_CLOSED or event == "Cancel":
+                if add_event == sg.WIN_CLOSED or add_event == "Cancel":
                     break
 
-                if event == "Submit":
+                if add_event == "Submit":
                     items_not_empty = 0
 
                     contact_to_add = {
+                        # TODO: Make safety to ensure the number is unique.
+                        #  It's very unlikely, but still possible that two id are the same.
                         "id": int(str(uuid.uuid1().int)[:5]),  # This shortens the uuid, while keeping it as an int.
-                        "Name": values_input["name"],
-                        "Email Address": values_input["email"],
-                        "Phone Number": values_input["phone"]
+                        "Name": add_values_input["name"],
+                        "Email Address": add_values_input["email"],
+                        "Phone Number": add_values_input["phone"]
                     }
 
                     # If only one item has been filled out (it will always be id), throw an error and stop
@@ -132,8 +135,8 @@ def main():
 
             add_contact_window.close()
 
-        if event == "-TABLE-":
-            row_selected = [read_config.make_lists_from_contacts(SAVED_CONTACTS)[row] for row in values[event]]
+        if main_event == "-TABLE-":
+            row_selected = [read_config.make_lists_from_contacts(SAVED_CONTACTS)[row] for row in main_values_input[main_event]]
 
             # For some reason when we refresh the table, the event is set to -TABLE- again,
             # but there is no row selected, so row_selected doesn't equal anything.
@@ -149,31 +152,31 @@ def main():
             options_menu = new_windows.row_selected_window(row_selected)
 
             while True:
-                event, values_input = options_menu.read()
-                if event == sg.WIN_CLOSED or event == "Cancel":
+                options_event, options_values_input = options_menu.read()
+                if options_event == sg.WIN_CLOSED or options_event == "Cancel":
                     break
 
                 with open(SAVED_CONTACTS, 'r') as file:
                     data = json.load(file)
 
-                if event == "-EDIT-":
+                if options_event == "-EDIT-":
                     for item in data:
                         if item["id"] == id_to_find[0]:
                             options_menu.close()
                             edit_window = new_windows.edit_contact_window(item)
                             while True:
-                                event, values_input = edit_window.read()
+                                edit_event, edit_values_input = edit_window.read()
 
-                                if event == sg.WIN_CLOSED or event == "Cancel":
+                                if edit_event == sg.WIN_CLOSED or edit_event == "Cancel":
                                     break
 
-                                if event == "Submit":
+                                if edit_event == "Submit":
                                     items_not_empty = 0
 
                                     contact_to_add = {
-                                        "Name": values_input["name"],
-                                        "Email Address": values_input["email"],
-                                        "Phone Number": values_input["phone"]
+                                        "Name": edit_values_input["name"],
+                                        "Email Address": edit_values_input["email"],
+                                        "Phone Number": edit_values_input["phone"]
                                     }
 
                                     # If only one item has been filled out (it will always be id),
@@ -183,9 +186,9 @@ def main():
                                             items_not_empty += 1
 
                                     if items_not_empty > 1:
-                                        item["Name"] = values_input["name"]
-                                        item["Email Address"] = values_input["email"]
-                                        item["Phone Number"] = values_input["phone"]
+                                        item["Name"] = edit_values_input["name"]
+                                        item["Email Address"] = edit_values_input["email"]
+                                        item["Phone Number"] = edit_values_input["phone"]
 
                                     with open(SAVED_CONTACTS, "w") as file:
                                         json.dump(data, file, indent=4)
@@ -194,17 +197,17 @@ def main():
                                 break
                             edit_window.close()
 
-                if event == "-DELETE-":
+                if options_event == "-DELETE-":
                     confirmation = new_windows.confirmation_window()
 
                     options_menu.close()
                     while True:
-                        event, values_input = confirmation.read()
+                        confirm_event, confirm_values_input = confirmation.read()
 
-                        if event == sg.WIN_CLOSED or event == "Cancel":
+                        if confirm_event == sg.WIN_CLOSED or confirm_event == "Cancel":
                             break
 
-                        if event == "-ERADICATE-":
+                        if confirm_event == "-ERADICATE-":
                             for item in data:
                                 if list(item.values()) == row_selected[0]:
                                     data.remove(item)
@@ -216,15 +219,15 @@ def main():
                             break
                     confirmation.close()
 
-        if event == "About":
+        if main_event == "About":
             about_window = new_windows.about_window()
 
             while True:
-                event, values_input = about_window.read()
-                if event == sg.WIN_CLOSED or event == "Cancel":
+                about_event, about_values_input = about_window.read()
+                if about_event == sg.WIN_CLOSED or about_event == "Cancel":
                     break
 
-                if event == "-CONFIG-TELEPORT-":
+                if about_event == "-CONFIG-TELEPORT-":
                     match platform.system():
                         case "Windows":
                             os.system(f"explorer {USR_CONFIG_DIR}")
@@ -237,7 +240,7 @@ def main():
                                                      "or you're not using Windows, Linux or macOS."
                                                      "\nPlease make an issue on the GitHub repo with information "
                                                      "regarding your OS.")
-                if event == "-GH-BUTTON-":
+                if about_event == "-GH-BUTTON-":
                     webbrowser.open("https://github.com/BanjoTheBot/py_contact_book")
     window.close()
 
