@@ -7,3 +7,4 @@ import os
 USR_CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "banjo", "py-contact-book")
 CONFIG_PATH = os.path.join(USR_CONFIG_DIR, "config.ini")
 SAVED_CONTACTS = os.path.join(USR_CONFIG_DIR, "saved_contacts.json")
+IMG_CACHE = os.path.join(USR_CONFIG_DIR, "img_cache")

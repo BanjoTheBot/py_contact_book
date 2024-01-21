@@ -8,11 +8,12 @@ import sys
 import uuid
 import webbrowser
 from configparser import ConfigParser
+from PIL import Image
 
 import PySimpleGUI as sg
 
 from src.modules import new_windows, read_config, write_config
-from src.modules.config_paths import CONFIG_PATH, SAVED_CONTACTS, USR_CONFIG_DIR
+from src.modules.config_paths import CONFIG_PATH, IMG_CACHE, SAVED_CONTACTS, USR_CONFIG_DIR
 
 # Since the file structure changes when the program is bundled in an exe, we have to check to see what state it's in,
 # and then change the path the original config and json files are found in accordingly.
@@ -33,6 +34,10 @@ if not os.path.exists(CONFIG_PATH):
 
 if not os.path.exists(SAVED_CONTACTS):
     shutil.copy(os.path.join(bundle_dir, "saved_contacts.json"), SAVED_CONTACTS)
+
+# Makes path for cached images
+if not os.path.exists(IMG_CACHE):
+    os.makedirs(IMG_CACHE)
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
@@ -149,20 +154,11 @@ def main():
             else:
                 id_to_find = (row_selected[0])
 
-            options_menu = new_windows.row_selected_window(row_selected)
-
-            while True:
-                options_event, options_values_input = options_menu.read()
-                if options_event == sg.WIN_CLOSED or options_event == "Cancel":
-                    break
-
                 with open(SAVED_CONTACTS, 'r') as file:
                     data = json.load(file)
 
-                if options_event == "-EDIT-":
                     for item in data:
                         if item["id"] == id_to_find[0]:
-                            options_menu.close()
                             edit_window = new_windows.edit_contact_window(item)
                             while True:
                                 edit_event, edit_values_input = edit_window.read()
@@ -194,13 +190,19 @@ def main():
                                         json.dump(data, file, indent=4)
 
                                     refresh_table(window)
+
+                                    file_path = edit_values_input["-EDIT_PFP-"]
+
+                                    if os.path.isfile(file_path):
+                                        image = Image.open(file_path)
+                                        image = image.resize((300, 300))
+                                        image.save(os.path.join(IMG_CACHE, f"{item["id"]}.png"))
                                 break
                             edit_window.close()
 
-                if options_event == "-DELETE-":
+                if edit_event == "-DELETE-":
                     confirmation = new_windows.confirmation_window()
 
-                    options_menu.close()
                     while True:
                         confirm_event, confirm_values_input = confirmation.read()
 
@@ -217,6 +219,7 @@ def main():
 
                             refresh_table(window)
                             break
+                    edit_window.close()
                     confirmation.close()
 
         if main_event == "About":

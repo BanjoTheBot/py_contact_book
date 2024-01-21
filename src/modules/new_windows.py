@@ -6,7 +6,7 @@ from configparser import ConfigParser
 import PySimpleGUI as sg
 
 from src.modules import read_config
-from src.modules.config_paths import CONFIG_PATH
+from src.modules.config_paths import CONFIG_PATH, IMG_CACHE
 
 # Initialise config parser and show it where the config file is
 config = ConfigParser()
@@ -42,33 +42,33 @@ def new_contact_window():
     return window
 
 
-def row_selected_window(row_selected):
-    """Window with options that appears when you select a row in the contacts table"""
+def edit_contact_window(contact_id):
+    """Window that appears when you select a row in the contacts table.
+        Contains more info about the contact, as well as options to edit them.
+    """
+    if read_config.return_pfp_exists_status(contact_id["id"]):
+        pfp_path = f"{IMG_CACHE}/{contact_id["id"]}.png"
+    else:
+        pfp_path = f"{read_config.path_for_images()}/blank_pfp.png"
+
     layout = [
-        [sg.Text("What would you like to do with this contact?", justification="c")],
-        [sg.Button("Edit", key="-EDIT-"), sg.Push(), sg.Button("Delete", key="-DELETE-")]
+        [sg.Image(pfp_path)],
+        [sg.InputText(key="-EDIT_PFP-",), sg.FileBrowse("Edit Picture",  file_types=(("Image Files", "*.png;*.jpg;*.jpeg"),))],
+        [sg.Text("id:"), sg.Text(contact_id["id"])],
+        [sg.Text("Name:"), sg.Push(), sg.InputText(contact_id["Name"], key="name")],
+        [sg.Text("Email Address:"), sg.InputText(contact_id["Email Address"], key="email")],
+        [sg.Text("Phone Number:"), sg.InputText(contact_id["Phone Number"], key="phone")],
+        [sg.Button("Submit"), sg.Button("Cancel"),sg.Button("Delete", button_color="red", key="-DELETE-")]
     ]
 
-    window = sg.Window("Contact Settings", layout, finalize=True)
-    return window
-
-
-def edit_contact_window(json_dict):
-    layout = [
-        [sg.Text("Name:"), sg.InputText(json_dict["Name"], key="name")],
-        [sg.Text("Email Address:"), sg.InputText(json_dict["Email Address"], key="email")],
-        [sg.Text("Phone Number:"), sg.InputText(json_dict["Phone Number"], key="phone")],
-        [sg.Button("Submit"), sg.Button("Cancel")]
-    ]
-
-    window = sg.Window("Edit Contact", layout, finalize=True)
+    window = sg.Window(f"Edit {contact_id["Name"]}'s Contact", layout, finalize=True, element_justification="c")
     return window
 
 
 def confirmation_window():
     layout = [
         [sg.Text("Are you sure you'd like to delete this contact? Press X to back out")],
-        [sg.Button("Yes, banish them to the shadow realm", key="-ERADICATE-")]
+        [sg.Button("Yes, banish them to the shadow realm", button_color="red", key="-ERADICATE-")]
     ]
 
     window = sg.Window("Delete Contact?", layout, element_justification="c", finalize=True)
@@ -76,14 +76,7 @@ def confirmation_window():
 
 
 def about_window():
-    # This is different from the same thing that happens in the main file,
-    # but it works, so I'm not gonna think about it.
-    if hasattr(sys, '_MEIPASS'):
-        # Running as a bundle in an exe (frozen)
-        bundle_dir = f"{sys._MEIPASS}/img"
-    else:
-        # Running directly as a script
-        bundle_dir = "./img"  # I don't know why it's whining, but it works, so I ain't touching it
+    bundle_dir = read_config.path_for_images()
 
     program_openings = read_config.return_stat("TimesProgramWasOpened")
     contacts_added = read_config.return_stat("AllTimeContactsAdded")
