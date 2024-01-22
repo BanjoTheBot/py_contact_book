@@ -7,10 +7,9 @@ import shutil
 import sys
 import uuid
 import webbrowser
-from configparser import ConfigParser
-from PIL import Image
 
 import PySimpleGUI as sg
+from PIL import Image
 
 from src.modules import new_windows, read_config, write_config
 from src.modules.config_paths import CONFIG_PATH, IMG_CACHE, SAVED_CONTACTS, USR_CONFIG_DIR
@@ -39,11 +38,6 @@ if not os.path.exists(SAVED_CONTACTS):
 if not os.path.exists(IMG_CACHE):
     os.makedirs(IMG_CACHE)
 
-# Initialise config parser and show it where the config file is
-config = ConfigParser()
-config.optionxform = str  # This should (hopefully) stop ConfigParser changing config keys to lowercase
-config.read(CONFIG_PATH)
-
 # This was originally going to be changeable,
 # but they may end up being more difficult than I thought, due to icons and PySimpleGui's sheer amount of themes
 window_theme = "DarkGray9"
@@ -51,7 +45,20 @@ window_theme = "DarkGray9"
 
 def make_contacts_table():
     top_row = ["id", "Name", "Email", "Phone No."]
+
+    # if read_config.get_config_value("Config", "ShowID", "false") == "false":
+    #     print("ey")
+
     rows = read_config.make_lists_from_contacts(SAVED_CONTACTS)
+
+    # Leftover from when I tried to add photos to the table
+    # for item in rows:
+    #     if read_config.return_pfp_exists_status(item[0]):
+    #         pfp_path = f"{IMG_CACHE}/{item[0]}.png"
+    #     else:
+    #         pfp_path = f"{read_config.path_for_images()}/blank_pfp.png"
+    #
+    #     item.insert(1, sg.Image(pfp_path))
 
     contacts_table = sg.Table(values=rows, headings=top_row,
                               auto_size_columns=True,
@@ -149,78 +156,75 @@ def main():
             # due to an out of range error.
             # Stopping anything from being assigned and making sure nothing happens after that fixes the crash,
             # but still refreshes the table, allowing everything to run as intended.
-            if not row_selected:
-                continue
-            else:
+            if row_selected:
                 id_to_find = (row_selected[0])
 
                 with open(SAVED_CONTACTS, 'r') as file:
                     data = json.load(file)
 
-                    for item in data:
-                        if item["id"] == id_to_find[0]:
-                            edit_window = new_windows.edit_contact_window(item)
-                            while True:
-                                edit_event, edit_values_input = edit_window.read()
+                for item in data:
+                    if item["id"] == id_to_find[0]:
+                        edit_window = new_windows.edit_contact_window(item)
+                        while True:
+                            edit_event, edit_values_input = edit_window.read()
 
-                                if edit_event == sg.WIN_CLOSED or edit_event == "Cancel":
-                                    break
-
-                                if edit_event == "Submit":
-                                    items_not_empty = 0
-
-                                    contact_to_add = {
-                                        "Name": edit_values_input["name"],
-                                        "Email Address": edit_values_input["email"],
-                                        "Phone Number": edit_values_input["phone"]
-                                    }
-
-                                    # If only one item has been filled out (it will always be id),
-                                    # throw an error and stop the user from adding an empty contact
-                                    for entry_value in contact_to_add.values():
-                                        if entry_value != "":
-                                            items_not_empty += 1
-
-                                    if items_not_empty > 1:
-                                        item["Name"] = edit_values_input["name"]
-                                        item["Email Address"] = edit_values_input["email"]
-                                        item["Phone Number"] = edit_values_input["phone"]
-
-                                    with open(SAVED_CONTACTS, "w") as file:
-                                        json.dump(data, file, indent=4)
-
-                                    refresh_table(window)
-
-                                    file_path = edit_values_input["-EDIT_PFP-"]
-
-                                    if os.path.isfile(file_path):
-                                        image = Image.open(file_path)
-                                        image = image.resize((300, 300))
-                                        image.save(os.path.join(IMG_CACHE, f"{item["id"]}.png"))
+                            if edit_event == sg.WIN_CLOSED or edit_event == "Cancel":
                                 break
-                            edit_window.close()
 
-                if edit_event == "-DELETE-":
-                    confirmation = new_windows.confirmation_window()
+                            if edit_event == "Submit":
+                                items_not_empty = 0
 
-                    while True:
-                        confirm_event, confirm_values_input = confirmation.read()
+                                contact_to_add = {
+                                    "Name": edit_values_input["name"],
+                                    "Email Address": edit_values_input["email"],
+                                    "Phone Number": edit_values_input["phone"]
+                                }
 
-                        if confirm_event == sg.WIN_CLOSED or confirm_event == "Cancel":
-                            break
+                                # If only one item has been filled out (it will always be id),
+                                # throw an error and stop the user from adding an empty contact
+                                for entry_value in contact_to_add.values():
+                                    if entry_value != "":
+                                        items_not_empty += 1
 
-                        if confirm_event == "-ERADICATE-":
-                            for item in data:
-                                if list(item.values()) == row_selected[0]:
-                                    data.remove(item)
+                                if items_not_empty > 1:
+                                    item["Name"] = edit_values_input["name"]
+                                    item["Email Address"] = edit_values_input["email"]
+                                    item["Phone Number"] = edit_values_input["phone"]
 
-                            with open(SAVED_CONTACTS, 'w') as file:
-                                json.dump(data, file, indent=4)
+                                with open(SAVED_CONTACTS, "w") as file:
+                                    json.dump(data, file, indent=4)
 
-                            refresh_table(window)
-                            break
-                    edit_window.close()
-                    confirmation.close()
+                                refresh_table(window)
+
+                                file_path = edit_values_input["-EDIT_PFP-"]
+
+                                if os.path.isfile(file_path):
+                                    image = Image.open(file_path)
+                                    image = image.resize((300, 300))
+                                    image.save(os.path.join(IMG_CACHE, f"{item["id"]}.png"))
+                                break
+
+                            if edit_event == "-DELETE-":
+                                confirmation = new_windows.confirmation_window()
+
+                                while True:
+                                    confirm_event, confirm_values_input = confirmation.read()
+
+                                    if confirm_event == sg.WIN_CLOSED or confirm_event == "Cancel":
+                                        break
+
+                                    if confirm_event == "-ERADICATE-":
+                                        for item in data:
+                                            if list(item.values()) == row_selected[0]:
+                                                data.remove(item)
+
+                                        with open(SAVED_CONTACTS, 'w') as file:
+                                            json.dump(data, file, indent=4)
+
+                                        refresh_table(window)
+                                        break
+                                confirmation.close()
+                        edit_window.close()
 
         if main_event == "About":
             about_window = new_windows.about_window()

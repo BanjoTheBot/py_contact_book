@@ -1,13 +1,6 @@
 """Edits values in the config"""
 
-from configparser import ConfigParser
-
-from src.modules.config_paths import CONFIG_PATH
-
-# Initialise config parser and show it where the config file is
-config = ConfigParser()
-config.optionxform = str  # This should (hopefully) stop ConfigParser changing config values to lowercase
-config.read(CONFIG_PATH)
+from src.modules.config_paths import CONFIG_PATH, config
 
 
 def value_exists_safety(section: str, key: str, value: str):
@@ -23,12 +16,17 @@ def value_exists_safety(section: str, key: str, value: str):
     """
     if not config.has_section(section):
         config.add_section(section)
+        print(f"{section} added")
 
     if not config.has_option(section, key):
         config.set(section, key, value)
+        print(f"{key} added to {section} with value {value}")
 
     with open(CONFIG_PATH, "w") as f:
         config.write(f)
+
+    # Reloads config file
+    config.read(CONFIG_PATH)
 
 
 def increment_key(section, key, increment_by):

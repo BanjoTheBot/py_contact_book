@@ -1,17 +1,9 @@
 """Contains all new windows that may be created"""
-import os
-import sys
-from configparser import ConfigParser
 
 import PySimpleGUI as sg
 
 from src.modules import read_config
-from src.modules.config_paths import CONFIG_PATH, IMG_CACHE
-
-# Initialise config parser and show it where the config file is
-config = ConfigParser()
-config.optionxform = str  # This should (hopefully) stop ConfigParser changing config values to lowercase
-config.read(CONFIG_PATH)
+from src.modules.config_paths import IMG_CACHE
 
 
 def error_window(message: str):

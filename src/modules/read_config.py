@@ -3,22 +3,17 @@
 import json
 import os
 import sys
-from configparser import ConfigParser
+
 from PIL import Image
 
 from src.modules import write_config
-from src.modules.config_paths import CONFIG_PATH, IMG_CACHE
-
-# Initialise config parser and show it where the config file is
-config = ConfigParser()
-config.optionxform = str  # This should (hopefully) stop ConfigParser changing config values to lowercase
-config.read(CONFIG_PATH)
+from src.modules.config_paths import CONFIG_PATH, IMG_CACHE, config
 
 
-def get_usr_theme():
-    """Returns the currently selected theme. Default is DarkGray9"""
-    write_config.value_exists_safety("Config", "UsrSelectedTheme", "DarkGray9")
-    return config.get("Config", "UsrSelectedTheme")
+def get_config_value(section, key, default_value):
+    """Returns the value of defined config key"""
+    write_config.value_exists_safety(section, key, default_value)
+    return config.get(section, key)
 
 
 def return_stat(stat):
@@ -38,11 +33,10 @@ def return_pfp_exists_status(contact_id):
         # Check if it's a regular file
         if os.path.isfile(file_path):
             file_name, file_extension = os.path.splitext(file)
-            if file_name == str(contact_id):
-                if file_extension == ".png":
-                    image = Image.open(file_path)  # Opens the image with Pillow, allowing us to check it's size properties
-                    if image.height == 300 and image.width == 300:
-                        return True
+            if file_name == str(contact_id) and file_extension == ".png":
+                image = Image.open(file_path)  # Opens the image with Pillow, allowing us to check it's size properties
+                if image.height == 300 and image.width == 300:
+                    return True
     return False
 
 
