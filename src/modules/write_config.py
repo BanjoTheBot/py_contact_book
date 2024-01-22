@@ -1,5 +1,5 @@
 """Edits values in the config"""
-
+from src.modules import new_windows
 from src.modules.config_paths import CONFIG_PATH, config
 
 
@@ -14,19 +14,22 @@ def value_exists_safety(section: str, key: str, value: str):
         :param key: The key to check
         :param value: The default value to set the key to if the section and key don't exist
     """
-    if not config.has_section(section):
-        config.add_section(section)
-        print(f"{section} added")
+    try:
+        if not config.has_section(section):
+            config.add_section(section)
+            print(f"{section} added")
 
-    if not config.has_option(section, key):
-        config.set(section, key, value)
-        print(f"{key} added to {section} with value {value}")
+        if not config.has_option(section, key):
+            config.set(section, key, value)
+            print(f"{key} added to {section} with value {value}")
 
-    with open(CONFIG_PATH, "w") as f:
-        config.write(f)
+        with open(CONFIG_PATH, "w") as f:
+            config.write(f)
 
-    # Reloads config file
-    config.read(CONFIG_PATH)
+        # Reloads config file
+        config.read(CONFIG_PATH)
+    except FileNotFoundError:
+        new_windows.error_window("There was an error finding your config file, please restart to generate a new one.")
 
 
 def increment_key(section, key, increment_by):
@@ -37,10 +40,14 @@ def increment_key(section, key, increment_by):
     """
     value_exists_safety(section, key, "0")
 
-    current_value = config.getint(section, key)
-    new_value = current_value + int(increment_by)
+    try:
+        current_value = config.getint(section, key)
+        new_value = current_value + int(increment_by)
 
-    config.set(section, key, str(new_value))
+        config.set(section, key, str(new_value))
 
-    with open(CONFIG_PATH, 'w') as config_file:
-        config.write(config_file)
+        with open(CONFIG_PATH, 'w') as config_file:
+            config.write(config_file)
+
+    except FileNotFoundError:
+        new_windows.error_window("There was an error finding your config file, please restart to generate a new one.")

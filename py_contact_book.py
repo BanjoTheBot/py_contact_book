@@ -28,11 +28,14 @@ else:
 if not os.path.exists(USR_CONFIG_DIR):
     os.makedirs(USR_CONFIG_DIR)
 
-if not os.path.exists(CONFIG_PATH):
-    shutil.copy(os.path.join(bundle_dir, "config.ini"), CONFIG_PATH)
+try:
+    if not os.path.exists(CONFIG_PATH):
+        shutil.copy(os.path.join(bundle_dir, "config.ini"), CONFIG_PATH)
 
-if not os.path.exists(SAVED_CONTACTS):
-    shutil.copy(os.path.join(bundle_dir, "saved_contacts.json"), SAVED_CONTACTS)
+    if not os.path.exists(SAVED_CONTACTS):
+        shutil.copy(os.path.join(bundle_dir, "saved_contacts.json"), SAVED_CONTACTS)
+except FileNotFoundError:
+    print("There's been an issue copying the config and json template files over. Did you delete them from root?")
 
 # Makes path for cached images
 if not os.path.exists(IMG_CACHE):
